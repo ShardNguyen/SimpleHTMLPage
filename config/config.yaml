@@ -1,0 +1,3 @@
+---
+postgresql:
+  dsn: host=go_db user=postgres password=123456789 dbname=postgres sslmode=disable TimeZone=UTC

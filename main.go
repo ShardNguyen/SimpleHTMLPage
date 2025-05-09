@@ -1,6 +1,7 @@
 package main
 
 import (
+	"SimpleHTMLPage/config"
 	dbpostgres "SimpleHTMLPage/databases/postgresql"
 	"SimpleHTMLPage/handlers"
 	"fmt"
@@ -10,18 +11,25 @@ import (
 )
 
 func main() {
+	err := config.ParseConfig()
+
+	if err != nil {
+		panic(err)
+	}
+
 	r := mux.NewRouter()
 
-	err := dbpostgres.UserConnect()
+	err = dbpostgres.UserConnect()
 
 	if err != nil {
 		fmt.Println("Cannot connect to database")
 		return
 	}
 
-	uh := handlers.NewUserHandler()
-	r.HandleFunc("POST /signup", uh.SignUp)
-	r.HandleFunc("POST /login", uh.Login)
+	userHandler := handlers.NewUserHandler()
 
-	http.ListenAndServe(":8080", nil)
+	r.HandleFunc("/signup", userHandler.SignUp).Methods(http.MethodPost)
+	r.HandleFunc("/login", userHandler.Login).Methods(http.MethodPost)
+
+	http.ListenAndServe(":8080", r)
 }

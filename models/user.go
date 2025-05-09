@@ -4,9 +4,11 @@ package models
 
 import (
 	// Removed import to avoid import cycle
+	"SimpleHTMLPage/consts"
 	dbpostgres "SimpleHTMLPage/databases/postgresql"
-	"SimpleHTMLPage/responses"
+	"SimpleHTMLPage/requests"
 	"SimpleHTMLPage/utilities"
+	utilauth "SimpleHTMLPage/utilities/auth"
 
 	"gorm.io/gorm"
 )
@@ -24,18 +26,29 @@ func CreateOrUpdateUserTable() error {
 	return userOrm.AutoMigrate(&User{})
 }
 
-func CreateUser(userRes *responses.UserResponse) error {
+func CreateUser(userReq *requests.UserSignUpRequest) error {
+	userOrm := dbpostgres.GetUserOrm()
+
+	// Check if username existed
+	userCheck, err := GetUser(userReq.ConvertToUserLoginRequest())
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	if userCheck.ID > 0 {
+		return consts.ErrUsernameExisted
+	}
+
 	salt := utilities.GenerateRandomSalt()
-	hashedPassword := utilities.HashPassword(userRes.Password, salt)
+	hashedPassword := utilauth.HashPassword(userReq.RawPassword, salt)
 
 	user := &User{
-		Username: userRes.Username,
-		Email:    userRes.Email,
+		Username: userReq.Username,
+		Email:    userReq.Email,
 		Password: hashedPassword,
 		Salt:     salt,
 	}
 
-	userOrm := dbpostgres.GetUserOrm()
 	result := userOrm.Create(user)
 
 	if result.Error != nil {
@@ -45,10 +58,10 @@ func CreateUser(userRes *responses.UserResponse) error {
 	return nil
 }
 
-func GetUser(userRes *responses.UserResponse) (*User, error) {
+func GetUser(userReq *requests.UserLoginRequest) (*User, error) {
 	userOrm := dbpostgres.GetUserOrm()
 	var user User
-	result := userOrm.Where(&User{Username: userRes.Username}).First(&user)
+	result := userOrm.Where(&User{Username: userReq.Username}).First(&user)
 
 	if result.Error != nil {
 		return nil, result.Error

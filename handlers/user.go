@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"SimpleHTMLPage/consts"
 	"SimpleHTMLPage/models"
-	"SimpleHTMLPage/responses"
-	"SimpleHTMLPage/utilities"
+	"SimpleHTMLPage/requests"
+	utilauth "SimpleHTMLPage/utilities/auth"
 	"encoding/json"
 	"net/http"
 )
@@ -16,47 +17,58 @@ func NewUserHandler() *UserHandler {
 }
 
 func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var userRes responses.UserResponse
+	var userReq requests.UserLoginRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&userRes); err != nil {
-		utilities.RespondError(w, http.StatusBadRequest, "Invalid Input")
+	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
+		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
 	}
 
-	user, err := models.GetUser(&userRes)
+	user, err := models.GetUser(&userReq)
+
+	// Reconsidering about this? Since it is not recommended
+	if err != nil {
+		RespondJSONError(w, http.StatusUnauthorized, consts.UsernameInvalid)
+		return
+	}
+
+	if !utilauth.VerifyPassword(user.Password, user.Salt, userReq.RawPassword) {
+		RespondJSONError(w, http.StatusUnauthorized, consts.PasswordInvalid)
+		return
+	}
+
+	token, err := utilauth.CreateToken(&userReq)
 
 	if err != nil {
-		utilities.RespondError(w, http.StatusInternalServerError, "Failed to get username")
+		RespondJSONError(w, http.StatusInternalServerError, consts.TokenGetFailed)
 		return
 	}
 
-	if user.ID == 0 {
-		utilities.RespondError(w, http.StatusUnauthorized, "Invalid username")
-		return
-	}
-
-	if !utilities.VerifyPassword(user.Password, user.Salt, userRes.Password) {
-		utilities.RespondError(w, http.StatusUnauthorized, "Invalid password")
-		return
-	}
-
-	utilities.RespondOK(w, "Logged in")
+	RespondJSONOK(w, token)
 }
 
 func (uh *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
-	var userRes responses.UserResponse
+	var userReq requests.UserSignUpRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&userRes); err != nil {
-		utilities.RespondError(w, http.StatusBadRequest, "Invalid Input")
+	err := json.NewDecoder(r.Body).Decode(&userReq)
+	if err != nil {
+		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
 	}
 
-	if err := models.CreateUser(&userRes); err != nil {
-		utilities.RespondError(w, http.StatusInternalServerError, "Failed to create user")
+	err = models.CreateUser(&userReq)
+
+	if err == consts.ErrUsernameExisted {
+		RespondJSONError(w, http.StatusBadRequest, consts.UsernameExisted)
 		return
 	}
 
-	utilities.RespondOK(w, "Registered")
+	if err != nil {
+		RespondJSONError(w, http.StatusInternalServerError, consts.CreateFailed)
+		return
+	}
+
+	RespondJSONOK(w, consts.Registered)
 }
 
 func (uh *UserHandler) SignOut(w http.ResponseWriter, r *http.Request) {

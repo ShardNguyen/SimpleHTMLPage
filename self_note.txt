@@ -1,6 +1,0 @@
-- About model folder:
-	+ One model file should describe how an entity looks like in the database
-	+ Inside that model file should has:
-		/ All attributes related to it
-		/ All CRUD related methods to it
-- You can treat a package as a class (For example: The postgresql one) and it's useful if we want to create Singletons?
