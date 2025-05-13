@@ -14,20 +14,20 @@ type UserClaims struct {
 	UserReq *requests.UserLoginRequest
 }
 
-func ParseToken(tokenStr string) error {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
+func ParseUserToken(tokenStr string) (*UserClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &UserClaims{}, func(token *jwt.Token) (any, error) {
 		return []byte(config.GetConfig().GetSecretKey()), nil
 	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if !token.Valid {
-		return consts.ErrTokenInvalid
+	if claims, ok := token.Claims.(*UserClaims); ok && token.Valid {
+		return claims, nil
 	}
 
-	return nil
+	return nil, consts.ErrTokenInvalid
 }
 
 func CreateToken(userReq *requests.UserLoginRequest) (string, error) {

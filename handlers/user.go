@@ -84,14 +84,14 @@ func (uh *UserHandler) Validate(w http.ResponseWriter, r *http.Request) {
 
 	tokenString = tokenString[len("Bearer "):]
 	fmt.Println(tokenString)
-	err := utilauth.ParseToken(tokenString)
+	userClaims, err := utilauth.ParseUserToken(tokenString)
 
 	if err != nil {
 		RespondJSONError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	RespondJSONOK(w, map[string]string{"token": tokenString})
+	RespondJSONOK(w, userClaims)
 }
 
 func (uh *UserHandler) SignOut(w http.ResponseWriter, r *http.Request) {
