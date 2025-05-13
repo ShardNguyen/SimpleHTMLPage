@@ -1,5 +1,2 @@
-Task 1: Phân biệt lại Requests và Responses trong code (Done)
-Task 2: Tạo một struct cho Config trong config.go (Done)
-Task 3: Thay đổi cấu hình cài đặt user, host,... trong DB và bỏ vào trong config (Done)
-Task 4: Sửa lại tên hàm UserConnect của Postgresql Database (Pass for now)
-Task 5: Thêm token vào trong chương trình
+Task 1: Thêm token vào trong chương trình
+Task 1.1: Server tạo JWT một cách bí mật và gửi JWT tới client (Gửi thông qua response)

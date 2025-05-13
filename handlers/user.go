@@ -6,6 +6,7 @@ import (
 	"SimpleHTMLPage/requests"
 	utilauth "SimpleHTMLPage/utilities/auth"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ func NewUserHandler() *UserHandler {
 func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var userReq requests.UserLoginRequest
 
+	// Verify login request
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
@@ -44,12 +46,13 @@ func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RespondJSONOK(w, token)
+	RespondJSONOK(w, map[string]string{"token": token})
 }
 
 func (uh *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var userReq requests.UserSignUpRequest
 
+	// Verify signup request
 	err := json.NewDecoder(r.Body).Decode(&userReq)
 	if err != nil {
 		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
@@ -69,6 +72,26 @@ func (uh *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondJSONOK(w, consts.Registered)
+}
+
+func (uh *UserHandler) Validate(w http.ResponseWriter, r *http.Request) {
+	tokenString := r.Header.Get("Authorization")
+
+	if tokenString == "" {
+		RespondJSONError(w, http.StatusUnauthorized, "Missing authorization header")
+		return
+	}
+
+	tokenString = tokenString[len("Bearer "):]
+	fmt.Println(tokenString)
+	err := utilauth.ParseToken(tokenString)
+
+	if err != nil {
+		RespondJSONError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	RespondJSONOK(w, map[string]string{"token": tokenString})
 }
 
 func (uh *UserHandler) SignOut(w http.ResponseWriter, r *http.Request) {

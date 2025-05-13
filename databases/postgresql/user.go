@@ -2,6 +2,7 @@ package dbpostgres
 
 import (
 	"SimpleHTMLPage/config"
+	"SimpleHTMLPage/consts"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -29,4 +30,15 @@ func UserConnect() (err error) {
 
 func GetUserOrm() *gorm.DB {
 	return userOrm
+}
+
+func CloseUserConnection() error {
+	if userOrm != nil {
+		sqlDB, err := userOrm.DB()
+		if err != nil {
+			return err
+		}
+		return sqlDB.Close()
+	}
+	return consts.ErrOrmNotExist
 }

@@ -15,6 +15,10 @@ type Config struct {
 		Dsn string `yaml:"dsn"`
 	} `yaml:"postgresql"`
 	secretKey string
+	/*
+		verifyKey *rsa.PublicKey
+		signKey   *rsa.PrivateKey
+	*/
 }
 
 var config *Config
@@ -62,5 +66,15 @@ func ParseConfig() error {
 		return err
 	}
 
+	/*
+		// Generate a random sign key (private key)
+		config.signKey, err = rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return err
+		}
+
+		// Generate a verify key (public key) corresponding to the private key
+		config.verifyKey = config.signKey.Public()
+	*/
 	return nil
 }

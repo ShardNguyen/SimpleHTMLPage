@@ -26,10 +26,12 @@ func main() {
 		return
 	}
 
+	defer dbpostgres.CloseUserConnection()
+
 	userHandler := handlers.NewUserHandler()
 
 	r.HandleFunc("/signup", userHandler.SignUp).Methods(http.MethodPost)
 	r.HandleFunc("/login", userHandler.Login).Methods(http.MethodPost)
-
+	r.HandleFunc("/validate", userHandler.Validate).Methods(http.MethodGet)
 	http.ListenAndServe(":8080", r)
 }

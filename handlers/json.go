@@ -23,6 +23,6 @@ func RespondJSONError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, map[string]string{"error": message})
 }
 
-func RespondJSONOK(w http.ResponseWriter, message string) {
-	respondJSON(w, http.StatusOK, map[string]string{"message": message})
+func RespondJSONOK(w http.ResponseWriter, data any) {
+	respondJSON(w, http.StatusOK, data)
 }
