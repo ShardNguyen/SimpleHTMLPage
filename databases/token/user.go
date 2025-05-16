@@ -7,11 +7,11 @@ import (
 )
 
 var mutex sync.Mutex
-var userTokenMap []string // Map has key being the user's token and value being the username
+var userTokenSlice []string // This 'database' is simply a slice of token strings
 
 // Return token is token is found and not expired
 func CheckUserTokenExists(tokenStr string) bool {
-	return slices.Contains(userTokenMap, tokenStr)
+	return slices.Contains(userTokenSlice, tokenStr)
 }
 
 func AddToken(tokenStr string) {
@@ -22,7 +22,7 @@ func AddToken(tokenStr string) {
 		return
 	}
 
-	userTokenMap = append(userTokenMap, tokenStr)
+	userTokenSlice = append(userTokenSlice, tokenStr)
 }
 
 // This is mainly used for signing out
@@ -31,11 +31,11 @@ func DeleteToken(tokenStr string) {
 		return
 	}
 
-	userTokenMap = slices.DeleteFunc(userTokenMap, func(token string) bool {
+	userTokenSlice = slices.DeleteFunc(userTokenSlice, func(token string) bool {
 		return token == tokenStr
 	})
 }
 
 func PrintAmountOfTokens() {
-	fmt.Println("# of user tokens: ", len(userTokenMap))
+	fmt.Println("# of user tokens: ", len(userTokenSlice))
 }

@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"SimpleHTMLPage/consts"
 	dbtoken "SimpleHTMLPage/databases/token"
 	"SimpleHTMLPage/models"
@@ -8,9 +11,6 @@ import (
 	"SimpleHTMLPage/responses"
 	utilpass "SimpleHTMLPage/utilities/password"
 	utiltoken "SimpleHTMLPage/utilities/token"
-	"encoding/json"
-	"fmt"
-	"net/http"
 )
 
 type UserHandler struct {
@@ -24,14 +24,10 @@ func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var userReq requests.UserLoginRequest
 
 	// Check if requested json file is decodable
+	// Also check input validity
 	err := json.NewDecoder(r.Body).Decode(&userReq)
-	if err != nil {
-		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
-		return
-	}
 
-	// Check input validity
-	if !userReq.CheckValidInput() {
+	if err != nil || !userReq.CheckValidInput() {
 		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
 	}
@@ -66,14 +62,10 @@ func (uh *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var userReq requests.UserSignUpRequest
 
 	// Check if requested json file is decodable
+	// Also check input validity
 	err := json.NewDecoder(r.Body).Decode(&userReq)
-	if err != nil {
-		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
-		return
-	}
 
-	// Check input validity
-	if !userReq.CheckValidInput() {
+	if err != nil || !userReq.CheckValidInput() {
 		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
 	}
@@ -102,12 +94,12 @@ func (uh *UserHandler) ValidateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokenString = tokenString[len("Bearer "):]
-	fmt.Println(tokenString)
 	userClaims, err := utiltoken.ParseUserToken(tokenString)
 
+	// Check validity of the request token
 	if err != nil || !dbtoken.CheckUserTokenExists(tokenString) {
 		RespondJSONError(w, http.StatusUnauthorized, consts.TokenInvalid)
-		dbtoken.DeleteToken(tokenString) // In case if token is expired but is still inside the token db
+		dbtoken.DeleteToken(tokenString) // In case token is expired but is still inside the token db
 		return
 	}
 

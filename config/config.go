@@ -1,9 +1,10 @@
 package config
 
 import (
-	utilstr "SimpleHTMLPage/utilities/string"
 	"os"
 	"path/filepath"
+
+	utilstr "SimpleHTMLPage/utilities/string"
 
 	yaml "gopkg.in/yaml.v3"
 )

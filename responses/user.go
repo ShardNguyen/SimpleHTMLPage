@@ -1,8 +1,9 @@
 package responses
 
 import (
-	"SimpleHTMLPage/models"
 	"time"
+
+	"SimpleHTMLPage/models"
 )
 
 type UserResponse struct {

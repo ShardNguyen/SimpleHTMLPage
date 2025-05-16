@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+
 	"SimpleHTMLPage/config"
 	dbpostgres "SimpleHTMLPage/databases/postgresql"
 	"SimpleHTMLPage/handlers"
-	"fmt"
-	"net/http"
 
 	"github.com/gorilla/mux"
 )

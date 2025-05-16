@@ -1,9 +1,10 @@
 package dbpostgres
 
 import (
+	"sync"
+
 	"SimpleHTMLPage/config"
 	"SimpleHTMLPage/consts"
-	"sync"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
