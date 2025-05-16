@@ -1,9 +1,9 @@
-package utilauth
+package utiltoken
 
 import (
 	"SimpleHTMLPage/config"
 	"SimpleHTMLPage/consts"
-	"SimpleHTMLPage/requests"
+	"SimpleHTMLPage/responses"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -11,7 +11,7 @@ import (
 
 type UserClaims struct {
 	*jwt.StandardClaims
-	UserReq *requests.UserLoginRequest
+	UserRes *responses.UserResponse
 }
 
 func ParseUserToken(tokenStr string) (*UserClaims, error) {
@@ -30,7 +30,7 @@ func ParseUserToken(tokenStr string) (*UserClaims, error) {
 	return nil, consts.ErrTokenInvalid
 }
 
-func CreateToken(userReq *requests.UserLoginRequest) (string, error) {
+func CreateToken(userRes *responses.UserResponse) (string, error) {
 	var secretKey = config.GetConfig().GetSecretKey()
 
 	// Define the token claims
@@ -38,7 +38,7 @@ func CreateToken(userReq *requests.UserLoginRequest) (string, error) {
 		&jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 		},
-		userReq,
+		userRes,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

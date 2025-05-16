@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"SimpleHTMLPage/consts"
+	dbtoken "SimpleHTMLPage/databases/token"
 	"SimpleHTMLPage/models"
 	"SimpleHTMLPage/requests"
-	utilauth "SimpleHTMLPage/utilities/auth"
+	"SimpleHTMLPage/responses"
+	utilpass "SimpleHTMLPage/utilities/password"
+	utiltoken "SimpleHTMLPage/utilities/token"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -20,13 +23,20 @@ func NewUserHandler() *UserHandler {
 func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var userReq requests.UserLoginRequest
 
-	// Verify login request
-	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
+	// Check if requested json file is decodable
+	err := json.NewDecoder(r.Body).Decode(&userReq)
+	if err != nil {
 		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
 	}
 
-	user, err := models.GetUser(&userReq)
+	// Check input validity
+	if !userReq.CheckValidInput() {
+		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
+		return
+	}
+
+	user, err := models.GetUser(userReq.Username)
 
 	// Reconsidering about this? Since it is not recommended
 	if err != nil {
@@ -34,27 +44,36 @@ func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !utilauth.VerifyPassword(user.Password, user.Salt, userReq.RawPassword) {
+	if !utilpass.VerifyPassword(user.Password, user.Salt, userReq.RawPassword) {
 		RespondJSONError(w, http.StatusUnauthorized, consts.PasswordInvalid)
 		return
 	}
 
-	token, err := utilauth.CreateToken(&userReq)
+	userRes := responses.NewUserResponse(user)
+	token, err := utiltoken.CreateToken(userRes)
 
 	if err != nil {
 		RespondJSONError(w, http.StatusInternalServerError, consts.TokenGetFailed)
 		return
 	}
 
+	dbtoken.AddToken(token)
+	dbtoken.PrintAmountOfTokens()
 	RespondJSONOK(w, map[string]string{"token": token})
 }
 
 func (uh *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var userReq requests.UserSignUpRequest
 
-	// Verify signup request
+	// Check if requested json file is decodable
 	err := json.NewDecoder(r.Body).Decode(&userReq)
 	if err != nil {
+		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
+		return
+	}
+
+	// Check input validity
+	if !userReq.CheckValidInput() {
 		RespondJSONError(w, http.StatusBadRequest, consts.InputInvalid)
 		return
 	}
@@ -71,29 +90,40 @@ func (uh *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RespondJSONOK(w, consts.Registered)
+	RespondJSONOK(w, map[string]string{"message": consts.Registered})
 }
 
-func (uh *UserHandler) Validate(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) ValidateUser(w http.ResponseWriter, r *http.Request) {
 	tokenString := r.Header.Get("Authorization")
 
 	if tokenString == "" {
-		RespondJSONError(w, http.StatusUnauthorized, "Missing authorization header")
+		RespondJSONError(w, http.StatusUnauthorized, consts.AuthHeaderMissing)
 		return
 	}
 
 	tokenString = tokenString[len("Bearer "):]
 	fmt.Println(tokenString)
-	userClaims, err := utilauth.ParseUserToken(tokenString)
+	userClaims, err := utiltoken.ParseUserToken(tokenString)
 
-	if err != nil {
-		RespondJSONError(w, http.StatusUnauthorized, err.Error())
+	if err != nil || !dbtoken.CheckUserTokenExists(tokenString) {
+		RespondJSONError(w, http.StatusUnauthorized, consts.TokenInvalid)
+		dbtoken.DeleteToken(tokenString) // In case if token is expired but is still inside the token db
 		return
 	}
 
-	RespondJSONOK(w, userClaims)
+	userResponse := userClaims.UserRes
+	RespondJSONOK(w, map[string]responses.UserResponse{"data": *userResponse})
 }
 
 func (uh *UserHandler) SignOut(w http.ResponseWriter, r *http.Request) {
+	tokenString := r.Header.Get("Authorization")
 
+	if tokenString == "" {
+		RespondJSONError(w, http.StatusUnauthorized, consts.AuthHeaderMissing)
+		return
+	}
+
+	tokenString = tokenString[len("Bearer "):]
+	dbtoken.DeleteToken(tokenString)
+	dbtoken.PrintAmountOfTokens()
 }

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"SimpleHTMLPage/utilities"
+	utilstr "SimpleHTMLPage/utilities/string"
 	"os"
 	"path/filepath"
 
@@ -15,10 +15,6 @@ type Config struct {
 		Dsn string `yaml:"dsn"`
 	} `yaml:"postgresql"`
 	secretKey string
-	/*
-		verifyKey *rsa.PublicKey
-		signKey   *rsa.PrivateKey
-	*/
 }
 
 var config *Config
@@ -28,7 +24,7 @@ func GetConfig() *Config {
 }
 
 func (c *Config) createSecretKey() {
-	c.secretKey = utilities.StringRand(keyLength)
+	c.secretKey = utilstr.StringRand(keyLength)
 }
 
 func (c *Config) GetPostgresqlDSN() string {
@@ -66,15 +62,5 @@ func ParseConfig() error {
 		return err
 	}
 
-	/*
-		// Generate a random sign key (private key)
-		config.signKey, err = rsa.GenerateKey(rand.Reader, 2048)
-		if err != nil {
-			return err
-		}
-
-		// Generate a verify key (public key) corresponding to the private key
-		config.verifyKey = config.signKey.Public()
-	*/
 	return nil
 }

@@ -1,4 +1,4 @@
-package utilauth
+package utilpass
 
 import (
 	"crypto/sha512"

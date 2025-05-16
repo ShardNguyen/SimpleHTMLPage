@@ -32,6 +32,8 @@ func main() {
 
 	r.HandleFunc("/signup", userHandler.SignUp).Methods(http.MethodPost)
 	r.HandleFunc("/login", userHandler.Login).Methods(http.MethodPost)
-	r.HandleFunc("/validate", userHandler.Validate).Methods(http.MethodGet)
+	r.HandleFunc("/validate", userHandler.ValidateUser).Methods(http.MethodGet)
+	r.HandleFunc("/signout", userHandler.SignOut).Methods(http.MethodPost)
+
 	http.ListenAndServe(":8080", r)
 }

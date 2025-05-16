@@ -1,15 +1,22 @@
 package responses
 
-import "fmt"
+import (
+	"SimpleHTMLPage/models"
+	"time"
+)
 
 type UserResponse struct {
-	Username string `json:"username"`
-	Email    string `json:"email,omitempty"`
-	Password string `json:"password"`
+	Username  string
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func (userRes *UserResponse) PrintInfo() {
-	fmt.Println("Username: ", userRes.Username)
-	fmt.Println("Email: ", userRes.Email)
-	fmt.Println("Password: ", userRes.Password)
+func NewUserResponse(user *models.User) *UserResponse {
+	return &UserResponse{
+		Username:  user.Username,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
 }
