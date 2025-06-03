@@ -1,40 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-
 	"SimpleHTMLPage/config"
 	dbpostgres "SimpleHTMLPage/databases/postgresql"
-	"SimpleHTMLPage/handlers"
-
-	"github.com/gorilla/mux"
+	dbredis "SimpleHTMLPage/databases/redis"
+	"SimpleHTMLPage/routers"
+	"context"
 )
 
 func main() {
-	err := config.ParseConfig()
-
-	if err != nil {
+	if err := config.ParseConfig(); err != nil {
 		panic(err)
 	}
-
-	r := mux.NewRouter()
-
-	err = dbpostgres.UserConnect()
-
-	if err != nil {
-		fmt.Println("Cannot connect to database")
-		return
+	if err := dbpostgres.UserConnect(); err != nil {
+		panic(err)
 	}
 
 	defer dbpostgres.CloseUserConnection()
 
-	userHandler := handlers.NewUserHandler()
+	if err := dbredis.InitTokenStorage(); err != nil {
+		panic(err)
+	}
 
-	r.HandleFunc("/signup", userHandler.SignUp).Methods(http.MethodPost)
-	r.HandleFunc("/login", userHandler.Login).Methods(http.MethodPost)
-	r.HandleFunc("/validate", userHandler.ValidateUser).Methods(http.MethodGet)
-	r.HandleFunc("/signout", userHandler.SignOut).Methods(http.MethodPost)
+	// When server restarts, old tokens are not deleted
+	// So have to flush the database to delete all of the active tokens to reset login
+	err := dbredis.GetTokenStorage().FlushDB(context.Background()).Err()
+	if err != nil {
+		panic(err)
+	}
 
-	http.ListenAndServe(":8080", r)
+	routers.Run()
 }

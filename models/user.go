@@ -28,10 +28,11 @@ func CreateOrUpdateUserTable() error {
 func CreateUser(userReq *requests.UserSignUpRequest) error {
 	userOrm := dbpostgres.GetUserOrm()
 
+	// Check if username exists
 	userCheck, err := GetUser(userReq.Username)
 
-	// Check if there's any error
-	// Void the error if it is record not found
+	// Since getting user returns error when record is not found
+	// Void the error if the record is not found
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
@@ -41,6 +42,7 @@ func CreateUser(userReq *requests.UserSignUpRequest) error {
 		return consts.ErrUsernameExisted
 	}
 
+	// Generate a random salt and a hashed password for user
 	salt := utilities.GenerateRandomSalt()
 	hashedPassword := utilpass.HashPassword(userReq.RawPassword, salt)
 
@@ -51,6 +53,7 @@ func CreateUser(userReq *requests.UserSignUpRequest) error {
 		Salt:     salt,
 	}
 
+	// Create a user and store the info into the user's database
 	result := userOrm.Create(user)
 
 	if result.Error != nil {
@@ -62,9 +65,13 @@ func CreateUser(userReq *requests.UserSignUpRequest) error {
 
 func GetUser(username string) (*User, error) {
 	userOrm := dbpostgres.GetUserOrm()
+
+	// Find the record based on username
 	var user User
 	result := userOrm.Where(&User{Username: username}).First(&user)
 
+	// Return error if user is not found
+	// Or if there are other errors
 	if result.Error != nil {
 		return nil, result.Error
 	}

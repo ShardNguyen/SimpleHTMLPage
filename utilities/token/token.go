@@ -16,7 +16,7 @@ type UserClaims struct {
 
 func ParseUserToken(tokenStr string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &UserClaims{}, func(token *jwt.Token) (any, error) {
-		return []byte(config.GetConfig().GetSecretKey()), nil
+		return config.GetConfig().GetPublicKey(), nil
 	})
 
 	if err != nil {
@@ -31,17 +31,17 @@ func ParseUserToken(tokenStr string) (*UserClaims, error) {
 }
 
 func CreateToken(userRes *responses.UserResponse) (string, error) {
-	var secretKey = config.GetConfig().GetSecretKey()
+	token := jwt.New(jwt.GetSigningMethod("RS256"))
 
 	// Define the token claims
-	claims := &UserClaims{
+	token.Claims = &UserClaims{
 		&jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+			ExpiresAt: time.Now().Add(time.Second * time.Duration(config.GetConfig().GetJWTExpireDuration())).Unix(),
 		},
 		userRes,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	return token.SignedString([]byte(secretKey))
+	// Private key is used here to signify that
+	// The token is created by the server and only the server
+	return token.SignedString(config.GetConfig().GetPrivateKey())
 }

@@ -1,6 +1,6 @@
 package requests
 
-import utilinpvalid "SimpleHTMLPage/utilities/inpvalid"
+import utilvalidate "SimpleHTMLPage/utilities/validate"
 
 type UserLoginRequest struct {
 	Username    string `json:"username"`
@@ -13,13 +13,22 @@ type UserSignUpRequest struct {
 	RawPassword string `json:"password"`
 }
 
-func (loginReq *UserLoginRequest) CheckValidInput() bool {
-	return utilinpvalid.CheckValidUsername(loginReq.Username) &&
-		utilinpvalid.CheckValidPassword(loginReq.RawPassword)
+func (loginReq *UserLoginRequest) CheckValidUsername() error {
+	return utilvalidate.CheckValidUsername(loginReq.Username)
 }
 
-func (signUpReq *UserSignUpRequest) CheckValidInput() bool {
-	return utilinpvalid.CheckValidUsername(signUpReq.Username) &&
-		utilinpvalid.CheckValidEmail(signUpReq.Email) &&
-		utilinpvalid.CheckValidPassword(signUpReq.RawPassword)
+func (signUpReq *UserSignUpRequest) CheckValidInput() error {
+	if err := utilvalidate.CheckValidUsername(signUpReq.Username); err != nil {
+		return err
+	}
+
+	if err := utilvalidate.CheckValidEmail(signUpReq.Email); err != nil {
+		return err
+	}
+
+	if err := utilvalidate.CheckValidPassword(signUpReq.RawPassword); err != nil {
+		return err
+	}
+
+	return nil
 }

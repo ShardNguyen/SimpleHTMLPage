@@ -1,0 +1,3 @@
+Task 1: Restrict user to content.html
+Task 2: Make sure the sign out button redirects user to index.html
+Task 3: 

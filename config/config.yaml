@@ -1,3 +1,11 @@
 ---
 postgresql:
   dsn: host=go_db user=postgres password=123456789 dbname=postgres sslmode=disable TimeZone=UTC
+redis:
+  addr: redis:6379
+  db: 0
+  password:
+jwt:
+  publicKeyPath: config/key.rsa.pub
+  privateKeyPath: config/key.rsa
+  expireDuration: 3600

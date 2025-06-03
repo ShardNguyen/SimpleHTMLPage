@@ -1,4 +1,4 @@
-package handlers
+package utilresponders
 
 import (
 	"encoding/json"

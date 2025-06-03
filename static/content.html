@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content</title>
+</head>
+<body>
+    <h1>Logged In!</h1>
+
+    <div>
+        <h2>Logout</h2>
+        <button id="logoutButton" type="click">Sign Out</button>
+        <p id="logoutMessage"></p>
+    </div>
+
+    <div>
+
+    <script>
+        window.onload = async function() {
+            const token = localStorage.getItem('token');
+            const authResponse = await fetch('/user/u', {
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+        
+            if (!authResponse.ok) {
+                localStorage.removeItem('token');
+                window.location.href = '/static/index.html';
+            }
+        }
+
+        document.getElementById('logoutButton').addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            const response = await fetch('/user/signout', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+            });
+
+            
+            if (response.ok) {
+                localStorage.removeItem('token');
+                window.location.href = '/static/index.html';
+            } else {
+                const message = await response.text();
+                document.getElementById('logoutMessage').textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>

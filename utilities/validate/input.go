@@ -1,6 +1,7 @@
-package utilinpvalid
+package utilvalidate
 
 import (
+	"SimpleHTMLPage/consts"
 	"fmt"
 	"net/mail"
 )
@@ -23,36 +24,38 @@ func checkValidString(str string) bool {
 	return true
 }
 
-func CheckValidUsername(username string) bool {
+func CheckValidUsername(username string) error {
 	if len(username) < 7 || len(username) > 20 {
 		fmt.Println("Username's length is invalid!")
-		return false
+		return consts.ErrUsernameInvalid
 	}
 
 	if !checkValidString(username) {
-		return false
+		return consts.ErrUsernameInvalid
 	}
 
-	return true
+	return nil
 }
 
-func CheckValidPassword(password string) bool {
+func CheckValidPassword(password string) error {
 	if len(password) < 7 || len(password) > 255 {
 		fmt.Println("Password's length is invalid!")
-		return false
+		return consts.ErrPasswordInvalid
 	}
 
 	if !checkValidString(password) {
-		return false
+		return consts.ErrPasswordInvalid
 	}
 
-	return true
+	return nil
 }
 
-func CheckValidEmail(email string) bool {
+func CheckValidEmail(email string) error {
 	_, err := mail.ParseAddress(email)
+
 	if err != nil {
 		fmt.Println("Email is invalid!")
 	}
-	return err == nil
+
+	return err
 }
